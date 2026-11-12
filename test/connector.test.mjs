@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {inspect,parts,paragraphs}from '../src/connector.mjs';import {startFixture,archive}from '../fixtures/source.mjs';
+test('真实ZIP正文及编号部件可读取',()=>{const files=parts(archive());assert.match(files['word/numbering.xml'],/startOverride/);assert.ok(paragraphs(files['word/document.xml']).includes('120元'));assert.throws(()=>parts(Buffer.from('not zip')));});
+test('缺失移动配对可由材料表达',async()=>{const source=await startFixture();try{assert.ok((await inspect(source.url)).parts.includes('word/footnotes.xml'));const bad=await inspect(source.url,{kind:'unpaired'});assert.equal(bad.text.filter(value=>value==='进场时间').length,2);}finally{await source.close();}});

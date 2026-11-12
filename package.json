@@ -1,0 +1,19 @@
+{
+  "name": "revision-clauses",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "build": "node scripts/check.mjs",
+    "test": "node --test test/*.test.mjs",
+    "demo": "node src/demo.mjs",
+    "start": "node src/main.mjs"
+  },
+  "dependencies": {
+    "fast-xml-parser": "5.3.0",
+    "fflate": "0.8.2"
+  }
+}
