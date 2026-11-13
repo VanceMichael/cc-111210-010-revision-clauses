@@ -32,3 +32,25 @@ test('服务健康检查和单次查看走真实来源', async () => {
     assert.equal((await fetch(service.url + '/missing')).status, 404);
   } finally { await service.close(); await fixture.close(); await rm(directory, { recursive: true, force: true }); }
 });
+
+test('条款采集视图必填且不同视图留存互不覆盖', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'service-'));
+  const fixture = await startFixture();
+  const service = await startService({ source: fixture.url, directory });
+  try {
+    assert.equal((await fetch(service.url + '/collect')).status, 400);
+    assert.equal((await fetch(service.url + '/collect?view=final')).status, 400);
+    const accept = await (await fetch(service.url + '/collect?view=accept')).json();
+    assert.equal(accept.view, 'accept');
+    assert.ok(accept.package.sha256);
+    const fee = accept.clauses.find(clause => clause.paraId === '0000000A');
+    assert.equal(fee.text, '服务费120元');
+    assert.equal(fee.number.text, '5.');
+    const saved = await fetch(service.url + '/receive?key=effective&view=accept');
+    assert.equal(saved.status, 200);
+    assert.equal((await fetch(service.url + '/receive?key=effective&view=accept')).status, 200);
+    const conflict = await fetch(service.url + '/receive?key=effective&view=reject');
+    assert.equal(conflict.status, 400);
+    assert.match((await conflict.json()).error, /冲突/);
+  } finally { await service.close(); await fixture.close(); await rm(directory, { recursive: true, force: true }); }
+});
